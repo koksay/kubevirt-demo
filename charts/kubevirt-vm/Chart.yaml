@@ -1,0 +1,4 @@
+apiVersion: v2
+name: vm
+description: Create KubeVirt VM with a deployed application
+version: 0.0.1

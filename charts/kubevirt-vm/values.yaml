@@ -1,0 +1,20 @@
+vm:
+  hostname: test-vm
+  memory: 1024Mi
+  containerDisk:
+    image: quay.io/containerdisks/fedora:latest
+  cloudInit:
+    userData: |
+      #cloud-config
+      password: fedora
+      chpasswd: { expire: False }
+
+app:
+  deploy: false
+  deployScript: |
+    #!/bin/bash
+
+    echo "I'm a teapot" > /var/log/install-app.log
+  expose: false
+  exposePort: 80
+  exposeServiceType: ClusterIP

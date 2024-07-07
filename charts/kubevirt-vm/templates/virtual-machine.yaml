@@ -1,0 +1,39 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ .Values.vm.hostname }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    hostname: {{ .Values.vm.hostname }}
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: containerdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          rng: {}
+        resources:
+          requests:
+            memory: {{ .Values.vm.memory }}
+      terminationGracePeriodSeconds: 0
+      accessCredentials:
+      - sshPublicKey:
+          source:
+            secret:
+              secretName: my-pub-key
+          propagationMethod:
+            noCloud: {}
+      volumes:
+      - containerDisk:
+          image: {{ .Values.vm.containerDisk.image }}
+        name: containerdisk
+      - cloudInitNoCloud:
+          userData: {{- .Values.vm.cloudInit.userData | toYaml | indent 10 }}
+        name: cloudinitdisk

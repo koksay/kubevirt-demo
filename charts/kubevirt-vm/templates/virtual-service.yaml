@@ -1,0 +1,15 @@
+{{- if .Values.app.expose }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vmiservice-{{ .Release.Name }}
+spec:
+  ports:
+  - port: 27017
+    protocol: TCP
+    targetPort: {{ .Values.app.exposePort }}
+  selector:
+    special: key
+  type: {{ .Values.app.exposeServiceType }}
+{{- end }}

@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ssh-key-generator
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: ssh-key-generator
+      containers:
+      - name: ssh-key-generator
+        image: alpine:3.20.1
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            apk add --no-cache openssh kubectl && \
+            ssh-keygen -t rsa -b 4096 -f /keys/id_rsa -N "" && \
+            kubectl create secret generic my-pub-key --from-file=id_rsa.pub=/keys/id_rsa.pub && \
+            kubectl create secret generic my-pri-key --from-file=id_rsa=/keys/id_rsa
+        volumeMounts:
+        - name: ssh-keys
+          mountPath: /keys
+      restartPolicy: Never
+      volumes:
+      - name: ssh-keys
+        emptyDir: {}

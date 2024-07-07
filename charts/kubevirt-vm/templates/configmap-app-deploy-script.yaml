@@ -1,0 +1,9 @@
+{{- if .Values.app.deploy }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deploy-script-{{ .Release.Name }}
+data:
+  deploy.sh: {{ .Values.app.deployScript | toYaml | indent 4 }}
+{{- end }}
