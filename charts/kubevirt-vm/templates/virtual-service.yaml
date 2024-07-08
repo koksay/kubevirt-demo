@@ -10,6 +10,6 @@ spec:
     protocol: TCP
     targetPort: {{ .Values.app.exposePort }}
   selector:
-    special: key
+    hostname: {{ .Values.vm.hostname }}
   type: {{ .Values.app.exposeServiceType }}
 {{- end }}

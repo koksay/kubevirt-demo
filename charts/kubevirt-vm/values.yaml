@@ -12,9 +12,13 @@ vm:
 app:
   deploy: false
   deployScript: |
-    #!/bin/bash
-
-    echo "I'm a teapot" > /var/log/install-app.log
+    #cloud-config
+    password: fedora
+    chpasswd: { expire: False }
+    # Disable SELinux for now, so qemu-guest-agent can write the authorized_keys file
+    bootcmd:
+      - setenforce 0
+  
   expose: false
   exposePort: 80
   exposeServiceType: ClusterIP
