@@ -36,14 +36,17 @@ Set variables:
 ```bash
 export VERSION="v1.2.2"
 export KUBEVIRT_MANIFEST_DIR="./gitops/clusters/my-cluster/kubevirt"
+export KUBEVIRT_RELEASE_URL="github.com/kubevirt/kubevirt/releases/download"
 mkdir ${KUBEVIRT_MANIFEST_DIR}
 ```
 
 Add files to flux
 
 ```bash
-curl -L https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/kubevirt-operator.yaml -o ${KUBEVIRT_MANIFEST_DIR}/kubevirt-operator.yaml
-curl -L https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/kubevirt-cr.yaml -o ${KUBEVIRT_MANIFEST_DIR}/kubevirt-cr.yaml
+curl -L https://${KUBEVIRT_RELEASE_URL}/${VERSION}/kubevirt-operator.yaml \
+  -o ${KUBEVIRT_MANIFEST_DIR}/kubevirt-operator.yaml
+curl -L https://${KUBEVIRT_RELEASE_URL}/${VERSION}/kubevirt-cr.yaml \
+  -o ${KUBEVIRT_MANIFEST_DIR}/kubevirt-cr.yaml
 ```
 
 Push to the repo to deploy
@@ -58,7 +61,8 @@ git push
 ## Verify components
 
 ```bash
-kubectl get kubevirt.kubevirt.io/kubevirt -n kubevirt -o=jsonpath="{.status.phase}"
+kubectl get kubevirt.kubevirt.io/kubevirt -n kubevirt \
+  -o=jsonpath="{.status.phase}"
 ```
 
 ## Wait to be ready
