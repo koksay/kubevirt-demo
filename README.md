@@ -138,7 +138,7 @@ And a helm release:
 
 ```bash
 flux create helmrelease test-vm-1\
-  --chart kubevirt-vm \
+  --chart vm \
   --source HelmRepository/kubevirt-vm.flux-system \
   --release-name test-vm-1 \
   --target-namespace virtualmachines \
@@ -162,23 +162,29 @@ git push
 >VirtualMachine defines the desired state of a VM, while VirtualMachineInstance represents the actual running instance of the VM within Kubernetes.
 
 ```bash
-kubectl get vmis -n dev
+kubectl get vmis -n virtualmachines
 ```
 
 ## Get the Private key to connect via SSH
 
-```bash
-kubectl get secret my-pri-key -n dev -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/testvm && chmod 600 ~/.ssh/testvm
+Private key:
 
-kubectl get secret my-pub-key -n dev -o jsonpath='{.data.key1}' \
+```bash
+kubectl get secret my-pri-key -n virtualmachines -o jsonpath='{.data.key1}' \
+  | base64 -d > ~/.ssh/testvm && chmod 600 ~/.ssh/testvm
+```
+
+Public key:
+
+```bash
+kubectl get secret my-pub-key -n virtualmachines -o jsonpath='{.data.key1}' \
   | base64 -d > ~/.ssh/testvm.pub && chmod 600 ~/.ssh/testvm.pub
 ```
 
 Then connect using virtctl:
 
 ```bash
-kubectl virt ssh -i ~/.ssh/testvm fedora@test-vm -n dev
+kubectl virt ssh -i ~/.ssh/testvm fedora@test-vm-1 -n virtualmachines
 ```
 
 Try to access to the Kubernetes API inside the cluster:
