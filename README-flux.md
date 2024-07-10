@@ -1,28 +1,32 @@
-# Getting Started with KubeVirt and ArgoCD
+# Getting Started with KubeVirt and Flux
 
-## Deploy ArgoCD
+## Bootstrap Flux
 
-To start our GitOps journey with [ArgoCD](https://argoproj.github.io/cd/), we need to bootstrap it first:
+To start our GitOps journey with [Flux](https://fluxcd.io/), we need to bootstrap it first:
 
 ```bash
-# This will do a non-HA deployment. For production, you should use `manifests/ha/install.yaml` file
-export ARGOCD_VERSION="v2.11.4"
-kubectl create namespace argocd
-kubectl apply -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml
+flux check --pre
+► checking prerequisites
+✔ Kubernetes 1.25.3 >=1.20.6-0
+✔ prerequisites checks passed
 ```
 
-After installing Argo CD, check the installed Custom Resource Definitions:
+If the checks are successful, you can install Flux on the cluster. First export GitHub credentials:
 
 ```bash
-kubectl get crd | grep argoproj
+export GITHUB_USER=<GITHUB_USER>
+export GITHUB_TOKEN=<GITHUB_TOKEN>
 ```
 
-Wait until all pods are ready:
+Let’s install Flux on it - if you need to use other options, check out the installation page.
 
 ```bash
-kubectl wait pod --all --for=condition=Ready \
-                 --namespace=argocd --timeout=600s
+flux bootstrap github \
+  --owner=$GITHUB_USER \
+  --repository=kubevirt-demo \
+  --branch=main \
+  --path=./gitops/clusters/my-cluster \
+  --personal
 ```
 
 ## Install KubeVirt operator and CR
@@ -48,36 +52,10 @@ curl -L https://${KUBEVIRT_RELEASE_URL}/${VERSION}/kubevirt-cr.yaml \
 Push to the repo to deploy
 
 ```bash
+git pull
 git add ${KUBEVIRT_MANIFEST_DIR}
 git commit -am "Deploy KubeVirt"
 git push
-```
-
-Add kubevirt to ArgoCD:
-
-```bash
-cat <<EOF | kubectl apply -f -
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: kubevirt
-  namespace: argocd
-spec:
-  destination:
-    namespace: kubevirt
-    server: "https://kubernetes.default.svc"
-  project: default
-  source:
-    path: gitops/clusters/my-cluster/kubevirt
-    repoURL: "https://github.com/koksay/kubevirt-demo"
-    targetRevision: main
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-EOF
 ```
 
 ## Verify components
