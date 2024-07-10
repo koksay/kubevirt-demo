@@ -33,7 +33,7 @@ flux bootstrap github \
 
 ```bash
 export VERSION="v1.2.2"
-export KUBEVIRT_MANIFEST_DIR="./gitops/clusters/my-cluster/kibevirt"
+export KUBEVIRT_MANIFEST_DIR="./gitops/clusters/my-cluster/kubevirt"
 mkdir ${KUBEVIRT_MANIFEST_DIR}
 
 # add files to flux
