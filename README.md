@@ -1,16 +1,50 @@
 # Getting Started with KubeVirt
 
-## Install KubeVirt operator
+## Bootstrap Flux
+
+To start our GitOps journey with [Flux](https://fluxcd.io/), we need to bootstrap it first:
+
+```bash
+flux check --pre
+► checking prerequisites
+✔ Kubernetes 1.25.3 >=1.20.6-0
+✔ prerequisites checks passed
+```
+
+If the checks are successful, you can install Flux on the cluster. First export GitHub credentials:
+
+```bash
+export GITHUB_USER=<GITHUB_USER>
+export GITHUB_TOKEN=<GITHUB_TOKEN>
+```
+
+Let’s install Flux on it - if you need to use other options, check out the installation page.
+
+```bash
+flux bootstrap github \
+  --owner=$GITHUB_USER \
+  --repository=kubevirt-demo \
+  --branch=main \
+  --path=./gitops/clusters/my-cluster \
+  --personal
+```
+
+## Install KubeVirt operator and CR
 
 ```bash
 export VERSION="v1.2.2"
-kubectl create -f https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/kubevirt-operator.yaml
-```
+export KUBEVIRT_MANIFEST_DIR="./gitops/clusters/my-cluster/kibevirt"
+mkdir ${KUBEVIRT_MANIFEST_DIR}
 
-## Create KubeVirt CR
+# add files to flux
+curl -L https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/kubevirt-operator.yaml -o ${KUBEVIRT_MANIFEST_DIR}/kubevirt-operator.yaml
+curl -L https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/kubevirt-cr.yaml -o ${KUBEVIRT_MANIFEST_DIR}/kubevirt-cr.yaml
 
-```bash
-kubectl create -f https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/kubevirt-cr.yaml
+# git push to take effect
+git pull
+git add ${KUBEVIRT_MANIFEST_DIR}
+git commit -am "Deploy KubeVirt"
+git push
 ```
 
 ## Verify components
