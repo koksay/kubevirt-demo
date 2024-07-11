@@ -27,7 +27,7 @@ spec:
       - sshPublicKey:
           source:
             secret:
-              secretName: my-pub-key
+              secretName: pub-key-{{ .Release.Name }}
           propagationMethod:
             qemuGuestAgent:
               users:

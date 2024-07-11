@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-weight": "-1"
     "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   template:
@@ -19,8 +19,8 @@ spec:
           - |
             apk add --no-cache openssh kubectl && \
             ssh-keygen -t rsa -b 4096 -f /keys/id_rsa -N "" && \
-            kubectl create secret generic my-pub-key --from-file=key1=/keys/id_rsa.pub && \
-            kubectl create secret generic my-pri-key --from-file=key1=/keys/id_rsa
+            kubectl create secret generic pub-key-{{ .Release.Name }} --from-file=key1=/keys/id_rsa.pub && \
+            kubectl create secret generic pri-key-{{ .Release.Name }} --from-file=key1=/keys/id_rsa
         volumeMounts:
         - name: ssh-keys
           mountPath: /keys

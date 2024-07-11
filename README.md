@@ -22,7 +22,24 @@ Wait until all pods are ready:
 
 ```bash
 kubectl wait pod --all --for=condition=Ready \
-                 --namespace=argocd --timeout=600s
+  --namespace=argocd --timeout=600s
+```
+
+## Access to the UI
+
+If you did not create the service as `LoadBalancer`, then you can port-forward and access to the UI.
+
+First, get the `admin` password:
+
+```bash
+kubectl get secret argocd-initial-admin-secret -n argocd \
+  -o jsonpath="{.data.password}" | base64 -d
+```
+
+Port forward and access via `https://localhost:8080`:
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
 ## Install KubeVirt operator and CR
@@ -36,7 +53,7 @@ export KUBEVIRT_RELEASE_URL="github.com/kubevirt/kubevirt/releases/download"
 mkdir ${KUBEVIRT_MANIFEST_DIR}
 ```
 
-Add files to flux
+Add files to GitOps directory:
 
 ```bash
 curl -L https://${KUBEVIRT_RELEASE_URL}/${VERSION}/kubevirt-operator.yaml \
@@ -53,7 +70,7 @@ git commit -am "Deploy KubeVirt"
 git push
 ```
 
-Add kubevirt to ArgoCD:
+Add `kubevirt` application on ArgoCD:
 
 ```bash
 cat <<EOF | kubectl apply -f -
@@ -116,70 +133,46 @@ kubectl krew install virt
 
 ## Create the VM via Helm Chart installation
 
-First, package our helm chart:
+Create a `virtualmachine` application:
 
 ```bash
-helm package ./charts/kubevirt-vm
-```
+export VM_NAME="test-vm-1"
 
-Push it to an OCI registry:
-
-```bash
-helm push vm-0.0.1.tgz oci://ghcr.io/${GITHUB_USER}
-```
-
-Prepare the environment:
-
-```bash
-export VM_DIR="./gitops/clusters/my-cluster/virtualmachines/"
-mkdir ${VM_DIR}
-```
-
-Create a Helm Repo on flux:
-
-```bash
-flux create source helm kubevirt-vm \
-  --url=oci://ghcr.io/${GITHUB_USER} \
-  --export > ${VM_DIR}/kubevirt-vm-hr.yaml
-```
-
-Prepare `values.yaml` for the helm chart:
-
-```bash
-cat <<EOF > /tmp/vm-values.yaml
-vm:
-  hostname: test-vm-1
-  memory: 1024Mi
-  containerDisk:
-    image: quay.io/containerdisks/fedora:latest
-  cloudInit:
-    userData: |
-      #cloud-config
-      password: fedora
-      chpasswd: { expire: False }
+cat <<EOF | kubectl apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${VM_NAME}
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/koksay/kubevirt-demo.git'
+    targetRevision: main
+    path: charts/kubevirt-vm
+    helm:
+      releaseName: ${VM_NAME}
+      valuesObject:
+        vm:
+          hostname: ${VM_NAME}
+          memory: 1Gi
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+          cloudInit:
+            userData: |
+              #cloud-config
+              password: fedora
+              chpasswd: { expire: False }
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: virtualmachines
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
 EOF
-```
-
-And a helm release:
-
-```bash
-flux create helmrelease test-vm-1\
-  --chart vm \
-  --source HelmRepository/kubevirt-vm.flux-system \
-  --release-name test-vm-1 \
-  --target-namespace virtualmachines \
-  --create-target-namespace \
-  --values /tmp/vm-values.yaml \
-  --export > ${VM_DIR}/test-vm-1.yaml
-```
-
-Push to the repo to deploy
-
-```bash
-git pull
-git add ${VM_DIR}
-git commit -am "Create a new VM"
-git push
 ```
 
 ## Check the VMIs
@@ -196,21 +189,21 @@ kubectl get vmis -n virtualmachines
 Private key:
 
 ```bash
-kubectl get secret my-pri-key -n virtualmachines -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/testvm && chmod 600 ~/.ssh/testvm
+kubectl get secret pri-key-${VM_NAME} -n virtualmachines -o jsonpath='{.data.key1}' \
+  | base64 -d > ~/.ssh/${VM_NAME} && chmod 600 ~/.ssh/${VM_NAME}
 ```
 
 Public key:
 
 ```bash
-kubectl get secret my-pub-key -n virtualmachines -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/testvm.pub && chmod 600 ~/.ssh/testvm.pub
+kubectl get secret pub-key-${VM_NAME} -n virtualmachines -o jsonpath='{.data.key1}' \
+  | base64 -d > ~/.ssh/${VM_NAME}.pub && chmod 600 ~/.ssh/${VM_NAME}.pub
 ```
 
 Then connect using virtctl:
 
 ```bash
-kubectl virt ssh -i ~/.ssh/testvm fedora@test-vm-1 -n virtualmachines
+kubectl virt ssh -i ~/.ssh/${VM_NAME} fedora@${VM_NAME} -n virtualmachines
 ```
 
 Try to access to the Kubernetes API inside the cluster:
