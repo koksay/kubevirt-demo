@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VM Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        {% if vm_names %}
+        <h1 class="mt-5">Running VMs</h1>
+        <ul class="list-group mt-3">
+            {% for vm_name in vm_names %}
+            <li class="list-group-item">
+                {{ vm_name }}
+                <a href="/download/{{ vm_name }}" class="btn btn-sm btn-secondary float-right">Download SSH Key</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        
+        <h1 class="mt-5">Create New VM</h1>
+        <form action="/submit" method="post" class="mt-4">
+            <div class="form-group">
+                <label for="vm_name">VM Name:</label>
+                <input type="text" class="form-control" id="vm_name" name="vm_name" required>
+            </div>
+            <div class="form-group">
+                <label for="vm_size">VM Size:</label>
+                <select class="form-control" id="vm_size" name="vm_size" required>
+                    <option value="1Gi">1Gi</option>
+                    <option value="2Gi">2Gi</option>
+                    <option value="4Gi">4Gi</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+

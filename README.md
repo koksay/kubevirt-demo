@@ -66,7 +66,7 @@ Push to the repo to deploy
 
 ```bash
 git add ${KUBEVIRT_MANIFEST_DIR}
-git commit -am "Deploy KubeVirt"
+git commit -m "Deploy KubeVirt"
 git push
 ```
 
@@ -131,49 +131,42 @@ sudo install virtctl /usr/local/bin
 kubectl krew install virt
 ```
 
-## Create the VM via Helm Chart installation
-
-Create a `virtualmachine` application:
+## Deploy vm-provisioner app
 
 ```bash
-export VM_NAME="test-vm-1"
-
 cat <<EOF | kubectl apply -f -
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ${VM_NAME}
+  name: vm-provisioner
   namespace: argocd
 spec:
+  destination:
+    namespace: vm-provisioner
+    server: "https://kubernetes.default.svc"
   project: default
   source:
-    repoURL: 'https://github.com/koksay/kubevirt-demo.git'
+    path: gitops/clusters/my-cluster/vm-provisioner
+    repoURL: "https://github.com/koksay/kubevirt-demo"
     targetRevision: main
-    path: charts/kubevirt-vm
-    helm:
-      releaseName: ${VM_NAME}
-      valuesObject:
-        vm:
-          hostname: ${VM_NAME}
-          memory: 1Gi
-          containerDisk:
-            image: quay.io/containerdisks/fedora:latest
-          cloudInit:
-            userData: |
-              #cloud-config
-              password: fedora
-              chpasswd: { expire: False }
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: virtualmachines
   syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 EOF
 ```
+
+## Access to the app
+
+```bash
+kubectl port-forward vm-provisioner 5000:5000
+```
+
+## Create the VM via the app
+
+Create a VM using [vm-provisioner application](http://localhost:5000). Then download the SSH Key.
 
 ## Check the VMIs
 
@@ -184,26 +177,13 @@ EOF
 kubectl get vmis -n virtualmachines
 ```
 
-## Get the Private key to connect via SSH
+## Connect to the VM via SSH
 
-Private key:
-
-```bash
-kubectl get secret pri-key-${VM_NAME} -n virtualmachines -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/${VM_NAME} && chmod 600 ~/.ssh/${VM_NAME}
-```
-
-Public key:
+Connect using virtctl:
 
 ```bash
-kubectl get secret pub-key-${VM_NAME} -n virtualmachines -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/${VM_NAME}.pub && chmod 600 ~/.ssh/${VM_NAME}.pub
-```
-
-Then connect using virtctl:
-
-```bash
-kubectl virt ssh -i ~/.ssh/${VM_NAME} fedora@${VM_NAME} -n virtualmachines
+chmod 600 ~/Downloads/${VM_NAME}.key
+kubectl virt ssh -i ~/Downloads/${VM_NAME}.key --local-ssh fedora@${VM_NAME} -n virtualmachines
 ```
 
 Try to access to the Kubernetes API inside the cluster:
