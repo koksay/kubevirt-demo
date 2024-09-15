@@ -34,7 +34,7 @@ flux bootstrap github \
 Set variables:
 
 ```bash
-export VERSION="v1.2.2"
+export VERSION=$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
 export KUBEVIRT_MANIFEST_DIR="./gitops/clusters/my-cluster/kubevirt"
 export KUBEVIRT_RELEASE_URL="github.com/kubevirt/kubevirt/releases/download"
 mkdir ${KUBEVIRT_MANIFEST_DIR}
