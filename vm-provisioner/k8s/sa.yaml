@@ -12,7 +12,7 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "watch", "list"]
-- apiGroups: ["argoproj.io"]
+- apiGroups: ["kubevirt.io"]
   resources: ["applications"]
   verbs: ["*"]
 ---

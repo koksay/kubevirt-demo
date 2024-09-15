@@ -146,7 +146,7 @@ spec:
     server: "https://kubernetes.default.svc"
   project: default
   source:
-    path: gitops/clusters/my-cluster/vm-provisioner
+    path: vm-provisioner/k8s
     repoURL: "https://github.com/koksay/kubevirt-demo"
     targetRevision: main
   syncPolicy:
