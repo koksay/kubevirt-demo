@@ -174,21 +174,21 @@ kubectl get vmis -n virtualmachines
 Private key:
 
 ```bash
-kubectl get secret my-pri-key -n virtualmachines -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/testvm && chmod 600 ~/.ssh/testvm
+kubectl get secret pri-key-test-vm-1 -n virtualmachines -o jsonpath='{.data.key1}' \
+  | base64 -d > ~/.ssh/test-vm-1 && chmod 600 ~/.ssh/test-vm-1
 ```
 
 Public key:
 
 ```bash
-kubectl get secret my-pub-key -n virtualmachines -o jsonpath='{.data.key1}' \
-  | base64 -d > ~/.ssh/testvm.pub && chmod 600 ~/.ssh/testvm.pub
+kubectl get secret pub-key-test-vm-1 -n virtualmachines -o jsonpath='{.data.key1}' \
+  | base64 -d > ~/.ssh/test-vm-1.pub && chmod 600 ~/.ssh/test-vm-1.pub
 ```
 
 Then connect using virtctl:
 
 ```bash
-kubectl virt ssh -i ~/.ssh/testvm fedora@test-vm-1 -n virtualmachines
+kubectl virt ssh -i ~/.ssh/test-vm-1 --local-ssh fedora@test-vm-1 -n virtualmachines
 ```
 
 Try to access to the Kubernetes API inside the cluster:
