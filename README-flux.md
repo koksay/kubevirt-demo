@@ -22,6 +22,7 @@ Let’s install Flux on it - if you need to use other options, check out the ins
 
 ```bash
 flux bootstrap github \
+  --token-auth \
   --owner=$GITHUB_USER \
   --repository=kubevirt-demo \
   --branch=main \
@@ -34,7 +35,7 @@ flux bootstrap github \
 Set variables:
 
 ```bash
-export VERSION=$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
+export VERSION="1.2.0"
 export KUBEVIRT_MANIFEST_DIR="./gitops/clusters/my-cluster/kubevirt"
 export KUBEVIRT_RELEASE_URL="github.com/kubevirt/kubevirt/releases/download"
 mkdir ${KUBEVIRT_MANIFEST_DIR}
